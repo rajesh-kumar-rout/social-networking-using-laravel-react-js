@@ -18,7 +18,7 @@ class PostController extends Controller
             'video_url' => 'nullable'
         ]);
 
-        if($request->description == null && $request->image == null) 
+        if($request->description == null && $request->image == null && $request->video_url == null) 
         {
             return response()->json(['error' => 'Either desc or image required'], 422);
         }
@@ -27,7 +27,11 @@ class PostController extends Controller
 
         $post->user_id = $request->user()->id;
         $post->description = $request->description;
-        $post->video_url = $request->video_url;
+
+        if($request->video_url && str_starts_with($request->video_url, "https://youtu.be/"))
+        {
+            $post->video_url = "https://youtube.com/embed/" . explode("be/", $request->video_url)[1];
+        }
 
         if($request->image) 
         {
@@ -100,6 +104,7 @@ class PostController extends Controller
                 'comments.created_at',
             ])
             ->selectRaw("concat(users.first_name, ' ', users.last_name) as user_name")
+            ->selectRaw("if(users.id = ?, 1, 0) as is_commented", [$request->user()->id])
             ->get();
 
         return response()->json($comments);
@@ -107,7 +112,7 @@ class PostController extends Controller
 
     public function feeds(Request $request)
     { 
-        $posts = $request->user
+        $posts = $request->user()
             ->followings()
             ->join('users', 'users.id', 'followers.following_id')
             ->join('posts', 'posts.user_id', 'users.id')
@@ -120,7 +125,7 @@ class PostController extends Controller
                 'posts.created_at',
             ])
             ->selectRaw("concat(users.first_name, ' ', users.last_name) AS user_name")
-            ->selectRaw('exists(select 1 from likes where likes.user_id = ? and likes.post_id = posts.id) AS is_liked', [$request->user->id])
+            ->selectRaw('exists(select 1 from likes where likes.user_id = ? and likes.post_id = posts.id) AS is_liked', [$request->user()->id])
             ->selectRaw('0 as is_posted')
             ->addSelect([
                 'total_likes' => Like::whereColumn('post_id', 'posts.id')->selectRaw('count(likes.post_id)'),

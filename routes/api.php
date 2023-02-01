@@ -51,16 +51,16 @@ Route::middleware('auth:api')->group(function(){
         
         Route::get('/', [UserController::class, 'users']);   
 
-        Route::get('/{user}', [UserController::class, 'user']);   
-
         Route::get('/{user}/photos', [UserController::class, 'photos']);  
 
         Route::get('/{user}/posts', [UserController::class, 'posts']);   
 
-        Route::get('/{user}/followers', [UserController::class, 'followers']);   
+        Route::get('/{userId}/followers', [UserController::class, 'followers']);   
 
-        Route::get('/{user}/followings', [UserController::class, 'followings']);   
+        Route::get('/{userId}/followings', [UserController::class, 'followings']);   
 
         Route::post('/{user}/toggle-follow', [UserController::class, 'toggleFollow']);   
+
+        Route::get('/{user}', [UserController::class, 'user']);   
     });
 });

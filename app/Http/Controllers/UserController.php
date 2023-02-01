@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Like;
 use App\Models\Comment;
 use App\Models\Follower;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -45,14 +46,20 @@ class UserController extends Controller
                 'total_likes' => Like::whereColumn('post_id', 'posts.id')->selectRaw('count(likes.post_id)'),
                 'total_comments' => Comment::whereColumn('post_id', 'posts.id')->selectRaw('count(comments.id)'),
             ])
+            ->orderBy('posts.id', 'desc')
             ->get();
 
         return response()->json($posts);
     }
 
-    public function followers(Request $request, User $user)
+    public function followers(Request $request, $userId)
     {
-        $followers = $user->followers()
+        if($userId == "me")
+        {
+            $userId = $request->user()->id;
+        }
+
+        $followers = Follower::where('following_id', $userId)
             ->join('users', 'users.id', 'followers.follower_id')
             ->select([
                 'users.id',
@@ -83,9 +90,14 @@ class UserController extends Controller
         return response()->json(['success' => 'Toggle follow state successfully']);
     }
 
-    public function followings(Request $request, User $user)
+    public function followings(Request $request, $userId)
     {
-        $followings = $user->followings()
+        if($userId == "me")
+        {
+            $userId = $request->user()->id;
+        }
+
+        $followings = Follower::where('follower_id', $userId)
             ->join('users', 'users.id', 'followers.following_id')
             ->select([
                 'users.id',
@@ -116,6 +128,10 @@ class UserController extends Controller
         $user->total_followers = $user->followers()->count();
 
         $user->total_posts = $user->posts()->count();
+        
+        $user->full_name = $user->first_name . ' ' . $user->last_name;
+
+        $user->is_following = $request->user()->followings()->where('following_id', $user->id)->exists();
 
         return response()->json($user);
     }

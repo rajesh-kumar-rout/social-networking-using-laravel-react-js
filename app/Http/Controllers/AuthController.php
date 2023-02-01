@@ -21,21 +21,21 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'first_name' => 'required|max:30',
-            'last_name' => 'required|max:30',
-            'email' => 'required|email|max:30|unique:users,email',
+            'first_name' => 'required|max:40',
+            'last_name' => 'required|max:40',
+            'email' => 'required|email|max:40|unique:users,email',
             'password' => 'required|min:6|max:20',
             'bio' => 'required|max:255',
             'birth_date' => 'nullable|date',
-            'work' => 'nullable|max:30',
-            'current_city' => 'nullable|max:30',
-            'home_town' => 'nullable|max:30',
-            'school' => 'nullable|max:30',
-            'college' => 'nullable|max:30',
-            'relationship' => 'nullable|max:30',
-            'gender' => 'nullable|max:30',
-            'profile_image' => 'nullable|image',
-            'cover_image' => 'nullable|image'
+            'work' => 'nullable|max:40',
+            'current_city' => 'nullable|max:40',
+            'home_town' => 'nullable|max:40',
+            'school' => 'nullable|max:40',
+            'college' => 'nullable|max:40',
+            'relationship' => 'nullable|max:40',
+            'gender' => 'nullable|max:40',
+            'profile_image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:4000',
+            'cover_image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:4000'
         ]);
 
         $user = new User;
@@ -110,22 +110,21 @@ class AuthController extends Controller
 
     public function editAccount(Request $request)
     {
-        $data = $request->validate([
-            'first_name' => 'required|max:30',
-            'last_name' => 'required|max:30',
-            'email' => 'required|email|max:30|unique:users,email,' . $request->user()->id,
-            'password' => 'required|min:6|max:20',
+        $request->validate([
+            'first_name' => 'required|max:40',
+            'last_name' => 'required|max:40',
+            'email' => 'required|email|max:40|unique:users,email,' . $request->user()->id,
             'bio' => 'required|max:255',
             'birth_date' => 'nullable|date',
-            'work' => 'nullable|max:30',
-            'current_city' => 'nullable|max:30',
-            'home_town' => 'nullable|max:30',
-            'school' => 'nullable|max:30',
-            'college' => 'nullable|max:30',
-            'relationship' => 'nullable|max:30',
-            'gender' => 'nullable|max:30',
-            'profile_image' => 'nullable|image',
-            'cover_image' => 'nullable|image'
+            'work' => 'nullable|max:40',
+            'current_city' => 'nullable|max:40',
+            'home_town' => 'nullable|max:40',
+            'school' => 'nullable|max:40',
+            'college' => 'nullable|max:40',
+            'relationship' => 'nullable|max:40',
+            'gender' => 'nullable|max:40',
+            'profile_image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:4000',
+            'cover_image' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:4000'
         ]);
 
         $user = $request->user();

@@ -13,7 +13,9 @@ class ConvertResponseToCamelCase
         $replaced = [];
 
         foreach ($data as $key => $value) {
-            $replaced[Str::camel($key)] = is_array($value) ? $this->getInCamelCase($value) : $value;
+            
+            $replaced[Str::camel($key)] = (($value == "null" && ($value != false && $value != true)) || is_null($value)) ? "" : (is_array($value) ? $this->getInCamelCase($value) : $value);
+            // $replaced[Str::camel($key)] = is_array($value) ? $this->getInCamelCase($value) : $value;
         }
 
         return $replaced;

@@ -17,7 +17,7 @@ class UserController extends Controller
                 'id',
                 'profile_image_url'
             ])
-            ->selectRaw("concat(first_name, ' ', last_name) as full_name")
+            ->selectRaw("concat(social_users.first_name, ' ', social_users.last_name) as full_name")
             ->where('first_name', 'like', '%' . $request->query('query') . '%')
             ->orWhere('last_name', 'like', '%' . $request->query('query') . '%')
             ->limit($request->limit)
@@ -40,16 +40,28 @@ class UserController extends Controller
             ->selectRaw("'$user->id' as user_id")
             ->selectRaw("'$user->first_name $user->last_name' as user_name")
             ->selectRaw("'$user->profile_image_url' as profile_image_url")
-            ->selectRaw('exists(select 1 from likes where likes.user_id = ? and likes.post_id = posts.id) AS is_liked', [$request->user->id])
-            ->selectRaw('IF(posts.user_id = ?, 1, 0) AS is_posted', [$request->user->id])
+            ->selectRaw('exists(select 1 from social_likes where social_likes.user_id = ? and social_likes.post_id = social_posts.id) AS is_liked', [$request->user->id])
+            ->selectRaw('IF(social_posts.user_id = ?, 1, 0) AS is_posted', [$request->user->id])
             ->addSelect([
-                'total_likes' => Like::whereColumn('post_id', 'posts.id')->selectRaw('count(likes.post_id)'),
-                'total_comments' => Comment::whereColumn('post_id', 'posts.id')->selectRaw('count(comments.id)'),
+                'total_likes' => Like::whereColumn('post_id', 'posts.id')->selectRaw('count(social_likes.post_id)'),
+                'total_comments' => Comment::whereColumn('post_id', 'posts.id')->selectRaw('count(social_comments.id)'),
             ])
             ->orderBy('posts.id', 'desc')
             ->get();
 
         return response()->json($posts);
+    }
+
+    public function deleteComment(Request $request, Comment $comment)
+    { 
+        if($request->user()->id == $comment->user_id) 
+        {      
+            $comment->delete();
+
+            return response()->json(['success' => 'Comment deleted successfully']); 
+        }
+
+        abort(403);
     }
 
     public function followers(Request $request, $userId)
@@ -65,7 +77,8 @@ class UserController extends Controller
                 'users.id',
                 'users.profile_image_url'
             ])
-            ->selectRaw("concat(users.first_name, ' ', users.last_name) as full_name")
+            ->selectRaw("concat(social_users.first_name, ' ', social_users.last_name) as full_name")
+            ->limit(9)
             ->get();
 
         return response()->json($followers);
@@ -90,20 +103,31 @@ class UserController extends Controller
         return response()->json(['success' => 'Toggle follow state successfully']);
     }
 
-    public function followings(Request $request, $userId)
+    public function myFollowings(Request $request)
     {
-        if($userId == "me")
-        {
-            $userId = $request->user()->id;
-        }
-
-        $followings = Follower::where('follower_id', $userId)
+        $followings = $request->user()
+            ->followings()
             ->join('users', 'users.id', 'followers.following_id')
             ->select([
                 'users.id',
                 'users.profile_image_url'
             ])
-            ->selectRaw("concat(users.first_name, ' ', users.last_name) as full_name")
+            ->selectRaw("concat(social_users.first_name, ' ', social_users.last_name) as full_name")
+            ->get();
+
+        return response()->json($followings);
+    }
+
+    public function followings(Request $request, User $user)
+    {
+        $followings = $user->followings()
+            ->join('users', fn($query) => $query->on('users.id', 'followers.following_id'))
+            ->select([
+                'users.id',
+                'users.profile_image_url'
+            ])
+            ->limit($request->limit)
+            ->selectRaw("concat(social_users.first_name, ' ', social_users.last_name) as full_name")
             ->get();
 
         return response()->json($followings);

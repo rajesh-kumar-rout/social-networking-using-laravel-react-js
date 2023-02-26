@@ -103,8 +103,8 @@ class PostController extends Controller
                 'comments.comment',
                 'comments.created_at',
             ])
-            ->selectRaw("concat(users.first_name, ' ', users.last_name) as user_name")
-            ->selectRaw("if(users.id = ?, 1, 0) as is_commented", [$request->user()->id])
+            ->selectRaw("concat(social_users.first_name, ' ', social_users.last_name) as user_name")
+            ->selectRaw("if(social_users.id = ?, 1, 0) as is_commented", [$request->user()->id])
             ->get();
 
         return response()->json($comments);
@@ -122,14 +122,15 @@ class PostController extends Controller
                 'posts.id',
                 'posts.description',
                 'posts.image_url',
+                'posts.video_url',
                 'posts.created_at',
             ])
-            ->selectRaw("concat(users.first_name, ' ', users.last_name) AS user_name")
-            ->selectRaw('exists(select 1 from likes where likes.user_id = ? and likes.post_id = posts.id) AS is_liked', [$request->user()->id])
+            ->selectRaw("concat(social_users.first_name, ' ', social_users.last_name) AS user_name")
+            ->selectRaw('exists(select 1 from social_likes where social_likes.user_id = ? and social_likes.post_id = social_posts.id) AS is_liked', [$request->user()->id])
             ->selectRaw('0 as is_posted')
             ->addSelect([
-                'total_likes' => Like::whereColumn('post_id', 'posts.id')->selectRaw('count(likes.post_id)'),
-                'total_comments' => Comment::whereColumn('post_id', 'posts.id')->selectRaw('count(comments.id)')
+                'total_likes' => Like::whereColumn('post_id', 'posts.id')->selectRaw('count(social_likes.post_id)'),
+                'total_comments' => Comment::whereColumn('post_id', 'posts.id')->selectRaw('count(social_comments.id)')
             ])
             ->get();
 

@@ -12,7 +12,8 @@ class ConvertRequestToSnakeCase
     {
         $replaced = [];
 
-        foreach ($data as $key => $value) {
+        foreach ($data as $key => $value) 
+        {
             $replaced[Str::snake($key)] = is_array($value) ? $this->getInSnakeCase($value) : $value;
         }
 

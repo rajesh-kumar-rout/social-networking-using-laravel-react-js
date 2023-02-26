@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\UserController;
 
@@ -13,7 +12,7 @@ Route::prefix('auth')->group(function(){
 
         Route::patch('/change-password', [AuthController::class, 'changePassword']);
 
-        Route::patch('/edit-account', [AuthController::class, 'editAccount']);
+        Route::patch('/edit-profile', [AuthController::class, 'editProfile']);
         
         Route::delete('/logout', [AuthController::class, 'logout']);
     });
@@ -42,11 +41,6 @@ Route::middleware('auth:api')->group(function(){
         Route::get('/feeds', [PostController::class, 'feeds']);    
     });
 
-    Route::prefix('comments')->group(function(){
-        
-        Route::delete('/{comment}', [CommentController::class, 'deleteComment']);   
-    });
-
     Route::prefix('users')->group(function(){
         
         Route::get('/', [UserController::class, 'users']);   
@@ -57,10 +51,14 @@ Route::middleware('auth:api')->group(function(){
 
         Route::get('/{userId}/followers', [UserController::class, 'followers']);   
 
-        Route::get('/{userId}/followings', [UserController::class, 'followings']);   
+        Route::get('/me/followings', [UserController::class, 'myFollowings']);
 
-        Route::post('/{user}/toggle-follow', [UserController::class, 'toggleFollow']);   
+        Route::get('/{user}/followings', [UserController::class, 'followings']);   
 
-        Route::get('/{user}', [UserController::class, 'user']);   
+        Route::patch('/{user}/toggle-follow', [UserController::class, 'toggleFollow']);   
+
+        Route::get('/{user}', [UserController::class, 'user']);  
+        
+        Route::delete('/me/comments/{comment}', [UserController::class, 'deleteComment']);   
     });
 });

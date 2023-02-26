@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-use App\Models\Token;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,9 +12,7 @@ class AuthController extends Controller
 {
     public function account(Request $request)
     {
-        return response()->json([
-            'user' => $request->user() ? $request->user() : ''
-        ]);
+        return response()->json(['user' => $request->user() ? $request->user() : null]);
     }
 
     public function register(Request $request)
@@ -66,11 +63,12 @@ class AuthController extends Controller
 
         $user->save();
 
-        $token = $user->tokens()->create([
-            'token' => bin2hex(random_bytes(32))
+        $token = auth()->attempt([
+            'email' => $request->email,
+            'password' => $request->password
         ]);
 
-        return response()->json($token);
+        return response()->json(['token' => $token]);
     }
 
     public function login(Request $request)
@@ -82,16 +80,17 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if($user && Hash::check($request->password, $user->password)) 
+        if(!($user && Hash::check($request->password, $user->password))) 
         {
-            $token = $user->tokens()->create([
-                'token' => bin2hex(random_bytes(32))
-            ]);
-    
-            return response()->json($token);
+            return response()->json(['error' => 'Invalid email or password'], 422);
         }
 
-        return response()->json(['error' => 'Invalid email or password'], 422);
+        $token = auth()->attempt([
+            'email' => $request->email,
+            'password' => $request->password
+        ]);
+
+        return response()->json(['token' => $token]);
     }
 
     public function changePassword(Request $request)
@@ -108,7 +107,7 @@ class AuthController extends Controller
         return response()->json(['success' => 'Password changed successfully']);
     }
 
-    public function editAccount(Request $request)
+    public function editProfile(Request $request)
     {
         $request->validate([
             'first_name' => 'required|max:40',
@@ -173,7 +172,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Token::where('token', $request->header('authorization'))->delete();
+        auth()->logout();
  
         return response()->json(['success' => 'Logout successfully']);
     }
